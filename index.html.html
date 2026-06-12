@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Demandas — CRM Conslike</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f7; color: #1a1a2e; min-height: 100vh; padding: 24px 16px 48px; }
+  .container { max-width: 680px; margin: 0 auto; }
+
+  .header { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 14px; padding: 18px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .logo-circle { width: 46px; height: 46px; border-radius: 50%; background: #1a4fba; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .logo-circle svg { width: 24px; height: 24px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .header-text h1 { font-size: 17px; font-weight: 600; color: #1a1a2e; }
+  .header-text p { font-size: 12px; color: #7a7a9a; margin-top: 2px; }
+
+  .card { background: #fff; border-radius: 14px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .badge-num { width: 24px; height: 24px; border-radius: 50%; background: #e8effe; color: #1a4fba; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-title { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid1 { display: grid; gap: 14px; }
+  @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+
+  label { display: block; font-size: 12px; font-weight: 500; color: #6b6b8a; margin-bottom: 5px; }
+  input[type=text], input[type=date], select, textarea { width: 100%; font-size: 14px; color: #1a1a2e; padding: 9px 12px; border: 1.5px solid #e2e4ef; border-radius: 8px; background: #fff; outline: none; font-family: inherit; transition: border-color 0.15s; }
+  input[type=text]:focus, input[type=date]:focus, select:focus, textarea:focus { border-color: #1a4fba; }
+  textarea { resize: vertical; min-height: 88px; line-height: 1.55; }
+
+  .prio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .prio-btn { padding: 7px 16px; border-radius: 8px; border: 1.5px solid #e2e4ef; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: #6b6b8a; transition: all 0.12s; }
+  .prio-btn.active-baixa { background: #e6fff0; color: #1a7a3c; border-color: #1a7a3c; }
+  .prio-btn.active-media { background: #fffbe6; color: #a06000; border-color: #c88000; }
+  .prio-btn.active-alta  { background: #fff0f0; color: #c0152a; border-color: #c0152a; }
+
+  .upload-area { border: 2px dashed #c8cce0; border-radius: 10px; padding: 20px 16px; text-align: center; cursor: pointer; color: #8888aa; font-size: 13px; transition: all 0.15s; }
+  .upload-area:hover { border-color: #1a4fba; background: #f4f7ff; color: #1a4fba; }
+  .upload-area svg { width: 28px; height: 28px; display: block; margin: 0 auto 8px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .thumb { position: relative; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e4ef; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.6); color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; border: none; line-height: 1; font-weight: 700; }
+
+  .btn-gerar { width: 100%; padding: 14px; background: #1a4fba; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
+  .btn-gerar:hover { background: #1542a0; }
+  .btn-gerar svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  #preview-container { display: none; }
+  .preview-card { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .preview-header { background: #1a4fba; color: #fff; padding: 18px 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .preview-header .subtitle { font-size: 11px; opacity: 0.65; margin-bottom: 4px; letter-spacing: 0.05em; }
+  .preview-header h2 { font-size: 16px; font-weight: 600; }
+  .prio-badge { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 99px; flex-shrink: 0; margin-top: 2px; }
+  .preview-body { padding: 20px 24px; }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
+  .info-item { background: #f5f6fa; border-radius: 8px; padding: 10px 12px; }
+  .info-item .lbl { font-size: 11px; color: #8888aa; font-weight: 500; margin-bottom: 3px; }
+  .info-item .val { font-size: 14px; font-weight: 600; color: #1a1a2e; word-break: break-all; }
+
+  .divider { height: 1px; background: #eef0f8; margin: 16px 0; }
+  .sec-label { font-size: 11px; font-weight: 600; color: #8888aa; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+  .desc-box { background: #f5f6fa; border-radius: 8px; padding: 12px 14px; font-size: 14px; color: #1a1a2e; line-height: 1.65; white-space: pre-wrap; }
+
+  /* GALERIA DE EVIDÊNCIAS */
+  .ev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .ev-item { border-radius: 10px; overflow: hidden; border: 1.5px solid #e2e4ef; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; aspect-ratio: 4/3; }
+  .ev-item:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(26,79,186,0.15); border-color: #1a4fba; }
+  .ev-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ev-hint { font-size: 11px; color: #aaa; margin-top: 8px; }
+
+  /* LIGHTBOX */
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 16px; padding: 20px; }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 80vh; border-radius: 8px; object-fit: contain; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+  .lightbox-close { position: fixed; top: 16px; right: 20px; color: #fff; font-size: 32px; cursor: pointer; line-height: 1; font-weight: 300; background: none; border: none; }
+  .lightbox-nav { display: flex; gap: 12px; align-items: center; }
+  .lightbox-nav button { background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 8px; padding: 8px 20px; font-size: 14px; cursor: pointer; transition: background 0.15s; }
+  .lightbox-nav button:hover { background: rgba(255,255,255,0.28); }
+  .lightbox-counter { color: rgba(255,255,255,0.6); font-size: 13px; }
+  .lightbox-dl { background: #1a4fba; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .btn-action { flex: 1; min-width: 130px; padding: 11px 8px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; border: none; transition: opacity 0.15s; }
+  .btn-action svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .btn-action:hover { opacity: 0.88; }
+  .btn-wpp  { background: #25d366; color: #fff; }
+  .btn-html { background: #1a4fba; color: #fff; }
+  .btn-novo { background: #f0f2f7; color: #1a1a2e; border: 1.5px solid #e2e4ef; }
+  .toast { display: none; text-align: center; font-size: 13px; color: #1a7a3c; background: #e6fff0; border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo-circle">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Gerador de Demandas</h1>
+      <p>CRM Conslike — Suporte técnico</p>
+    </div>
+  </div>
+
+  <!-- FORMULÁRIO -->
+  <div id="form-area">
+    <div class="card">
+      <div class="section-header"><span class="badge-num">1</span><span class="section-title">Dados do cliente</span></div>
+      <div class="grid2">
+        <div><label>Nome do cliente</label><input type="text" id="nome" placeholder="Ex: João Silva"></div>
+        <div><label>Token / ID do cliente</label><input type="text" id="token" placeholder="Ex: TKN-00412"></div>
+        <div><label>Empresa / Corretora</label><input type="text" id="empresa" placeholder="Ex: Consórcio XYZ"></div>
+        <div><label>Data da ocorrência</label><input type="date" id="data"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-header"><span class="badge-num">2</span><span class="section-title">Tipo e prioridade</span></div>
+      <div class="grid1">
+        <div>
+          <label>Categoria do problema</label>
+          <select id="categoria">
+            <option value="">Selecione...</option>
+            <option>Cadastro de cliente</option>
+            <option>Integração com administradora</option>
+            <option>Chatbot / Atendimento automático</option>
+            <option>Envio de boletos</option>
+            <option>Comissões e relatórios</option>
+            <option>Funil de vendas</option>
+            <option>Permissões de usuário</option>
+            <option>WhatsApp integrado</option>
+            <option>Lance (fixo, livre, fidelidade)</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label>Prioridade</label>
+          <div class="prio-group">
+            <button class="prio-btn" data-p="Baixa">🟢 Baixa</button>
+            <button class="prio-btn" data-p="Média">🟡 Média</button>
+            <button class="prio-btn" data-p="Alta">🔴 Alta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-header"><span class="badge-num">3</span><span class="section-title">Descrição do problema</span></div>
+      <div class="grid1">
+        <div><label>O que está acontecendo?</label><textarea id="problema" placeholder="Descreva o problema com detalhes: o que tentou fazer, o que apareceu na tela, mensagem de erro, etc."></textarea></div>
+        <div><label>Passos para reproduzir (opcional)</label><textarea id="passos" placeholder="1. Acessei a tela X&#10;2. Cliquei em Y&#10;3. O erro apareceu"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-header"><span class="badge-num">4</span><span class="section-title">Evidências (prints / imagens)</span></div>
+      <div class="upload-area" id="upload-area">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Clique para adicionar prints ou arraste aqui
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none">
+      </div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+
+    <button class="btn-gerar" id="btn-gerar">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Gerar demanda
+    </button>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview-container">
+    <div class="preview-card">
+      <div class="preview-header">
+        <div>
+          <div class="subtitle">CRM CONSLIKE — DEMANDA TÉCNICA</div>
+          <h2 id="prev-titulo"></h2>
+        </div>
+        <span class="prio-badge" id="prev-prio"></span>
+      </div>
+      <div class="preview-body">
+        <div class="info-grid">
+          <div class="info-item"><div class="lbl">👤 Cliente</div><div class="val" id="prev-nome"></div></div>
+          <div class="info-item"><div class="lbl">🔑 Token / ID</div><div class="val" id="prev-token"></div></div>
+          <div class="info-item" id="row-empresa"><div class="lbl">🏢 Empresa</div><div class="val" id="prev-empresa"></div></div>
+          <div class="info-item"><div class="lbl">📅 Data</div><div class="val" id="prev-data"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="sec-label">Descrição do problema</div>
+        <div class="desc-box" id="prev-problema"></div>
+        <div id="passos-wrap">
+          <div class="divider"></div>
+          <div class="sec-label">Passos para reproduzir</div>
+          <div class="desc-box" id="prev-passos"></div>
+        </div>
+        <div id="thumb-wrap" style="display:none">
+          <div class="divider"></div>
+          <div class="sec-label">Evidências</div>
+          <div class="ev-grid" id="ev-grid"></div>
+          <p class="ev-hint">Clique em qualquer imagem para ampliar ou baixar.</p>
+        </div>
+        <div class="action-row">
+          <button class="btn-action btn-wpp" id="btn-copy">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Copiar para WhatsApp
+          </button>
+          <button class="btn-action btn-html" id="btn-salvar">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Salvar demanda (.html)
+          </button>
+          <button class="btn-action btn-novo" id="btn-novo">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova demanda
+          </button>
+        </div>
+        <div class="toast" id="toast">✓ Texto copiado! Cole no WhatsApp ou e-mail.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lb-close">×</button>
+  <img id="lb-img" src="" alt="Evidência">
+  <div class="lightbox-nav">
+    <button id="lb-prev">← Anterior</button>
+    <span class="lightbox-counter" id="lb-counter"></span>
+    <button id="lb-next">Próxima →</button>
+  </div>
+  <a class="lightbox-dl" id="lb-dl" download>
+    <svg style="width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Baixar imagem
+  </a>
+</div>
+
+<script>
+const imgs = [];
+let prioridade = '';
+let lbIndex = 0;
+
+document.getElementById('data').value = new Date().toISOString().split('T')[0];
+
+// Upload
+document.getElementById('upload-area').addEventListener('click', () => document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change', e => addFiles(e.target.files));
+document.getElementById('upload-area').addEventListener('dragover', e => { e.preventDefault(); e.currentTarget.style.background='#f4f7ff'; });
+document.getElementById('upload-area').addEventListener('dragleave', e => { e.currentTarget.style.background=''; });
+document.getElementById('upload-area').addEventListener('drop', e => { e.preventDefault(); e.currentTarget.style.background=''; addFiles(e.dataTransfer.files); });
+
+function addFiles(files) {
+  Array.from(files).forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => { imgs.push({ src: ev.target.result, name: f.name }); renderThumbs(); };
+    reader.readAsDataURL(f);
+  });
+}
+function renderThumbs() {
+  const c = document.getElementById('thumbs'); c.innerHTML = '';
+  imgs.forEach((img, i) => {
+    const d = document.createElement('div'); d.className = 'thumb';
+    const el = document.createElement('img'); el.src = img.src;
+    const rm = document.createElement('button'); rm.className = 'remove'; rm.textContent = '×';
+    rm.onclick = () => { imgs.splice(i, 1); renderThumbs(); };
+    d.appendChild(el); d.appendChild(rm); c.appendChild(d);
+  });
+}
+
+// Prioridade
+document.querySelectorAll('.prio-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.prio-btn').forEach(b => b.className = 'prio-btn');
+    prioridade = btn.dataset.p;
+    btn.className = 'prio-btn ' + (prioridade==='Baixa'?'active-baixa':prioridade==='Média'?'active-media':'active-alta');
+  });
+});
+
+function getFormData() {
+  return {
+    nome: document.getElementById('nome').value.trim(),
+    token: document.getElementById('token').value.trim(),
+    empresa: document.getElementById('empresa').value.trim(),
+    dataVal: document.getElementById('data').value,
+    categoria: document.getElementById('categoria').value,
+    problema: document.getElementById('problema').value.trim(),
+    passos: document.getElementById('passos').value.trim(),
+  };
+}
+
+// Gerar prévia
+document.getElementById('btn-gerar').addEventListener('click', () => {
+  const d = getFormData();
+  if (!d.nome || !d.token || !d.problema) { alert('Preencha pelo menos: Nome, Token e a descrição do problema.'); return; }
+  const dataFmt = d.dataVal ? new Date(d.dataVal + 'T12:00').toLocaleDateString('pt-BR') : '—';
+
+  document.getElementById('prev-titulo').textContent = d.categoria || 'Demanda técnica';
+  document.getElementById('prev-nome').textContent = d.nome;
+  document.getElementById('prev-token').textContent = d.token;
+  document.getElementById('prev-empresa').textContent = d.empresa || '—';
+  document.getElementById('row-empresa').style.display = d.empresa ? '' : 'none';
+  document.getElementById('prev-data').textContent = dataFmt;
+  document.getElementById('prev-problema').textContent = d.problema;
+
+  const prBadge = document.getElementById('prev-prio');
+  const prioColors = { 'Baixa':['#e6fff0','#1a7a3c'], 'Média':['#fffbe6','#a06000'], 'Alta':['#fff0f0','#c0152a'] };
+  if (prioridade && prioColors[prioridade]) {
+    prBadge.textContent = prioridade;
+    prBadge.style.background = prioColors[prioridade][0];
+    prBadge.style.color = prioColors[prioridade][1];
+  } else { prBadge.textContent = ''; }
+
+  if (d.passos) { document.getElementById('passos-wrap').style.display=''; document.getElementById('prev-passos').textContent=d.passos; }
+  else { document.getElementById('passos-wrap').style.display='none'; }
+
+  if (imgs.length) {
+    document.getElementById('thumb-wrap').style.display='';
+    const grid = document.getElementById('ev-grid'); grid.innerHTML='';
+    imgs.forEach((img, i) => {
+      const item = document.createElement('div'); item.className='ev-item';
+      const im = document.createElement('img'); im.src=img.src; im.alt='Evidência '+(i+1);
+      item.appendChild(im);
+      item.addEventListener('click', () => openLightbox(i));
+      grid.appendChild(item);
+    });
+  } else { document.getElementById('thumb-wrap').style.display='none'; }
+
+  document.getElementById('form-area').style.display='none';
+  document.getElementById('preview-container').style.display='block';
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+document.getElementById('btn-novo').addEventListener('click', () => {
+  document.getElementById('form-area').style.display='block';
+  document.getElementById('preview-container').style.display='none';
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+// Copiar WhatsApp
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const d = getFormData();
+  const dataFmt = d.dataVal ? new Date(d.dataVal + 'T12:00').toLocaleDateString('pt-BR') : '—';
+  let txt = `📋 *DEMANDA TÉCNICA — CRM CONSLIKE*\n━━━━━━━━━━━━━━━━━━━━━━\n`;
+  txt += `👤 *Cliente:* ${d.nome}\n🔑 *Token:* ${d.token}\n`;
+  if (d.empresa) txt += `🏢 *Empresa:* ${d.empresa}\n`;
+  txt += `📅 *Data:* ${dataFmt}\n📂 *Categoria:* ${d.categoria||'—'}\n🚨 *Prioridade:* ${prioridade||'Não definida'}\n`;
+  txt += `━━━━━━━━━━━━━━━━━━━━━━\n📝 *Descrição do problema:*\n${d.problema}\n`;
+  if (d.passos) txt += `\n📌 *Passos para reproduzir:*\n${d.passos}\n`;
+  if (imgs.length) txt += `\n🖼️ *Evidências:* ${imgs.length} imagem(ns) em anexo.\n`;
+  txt += `━━━━━━━━━━━━━━━━━━━━━━`;
+
+  const copy = t => {
+    navigator.clipboard.writeText(t).catch(() => {
+      const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    });
+  };
+  copy(txt);
+  const toast = document.getElementById('toast'); toast.style.display='block';
+  setTimeout(() => toast.style.display='none', 3000);
+});
+
+// Salvar HTML da demanda
+document.getElementById('btn-salvar').addEventListener('click', () => {
+  const d = getFormData();
+  const dataFmt = d.dataVal ? new Date(d.dataVal + 'T12:00').toLocaleDateString('pt-BR') : '—';
+  const prio = prioridade || 'Não definida';
+  const prioColors = { 'Baixa':['#e6fff0','#1a7a3c'], 'Média':['#fffbe6','#a06000'], 'Alta':['#fff0f0','#c0152a'], 'Não definida':['#f0f0f0','#888'] };
+  const pc = prioColors[prio];
+
+  const imgsHTML = imgs.length ? imgs.map((img,i) => `
+    <div style="border-radius:10px;overflow:hidden;border:1.5px solid #e2e4ef;cursor:pointer;aspect-ratio:4/3;" onclick="openLb(${i})">
+      <img src="${img.src}" alt="Evidência ${i+1}" style="width:100%;height:100%;object-fit:cover;display:block;">
+    </div>`).join('') : '';
+
+  const lbData = imgs.length ? `const lbImgs=${JSON.stringify(imgs.map(i=>i.src))};` : 'const lbImgs=[];';
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demanda — ${d.nome} — ${dataFmt}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f7;color:#1a1a2e;padding:24px 16px 48px}
+.container{max-width:700px;margin:0 auto}
+.hdr{background:#1a4fba;border-radius:14px 14px 0 0;padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hdr .sub{font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px;letter-spacing:.05em}
+.hdr h1{font-size:18px;font-weight:600;color:#fff}
+.prio{font-size:12px;font-weight:600;padding:4px 14px;border-radius:99px;background:${pc[0]};color:${pc[1]};flex-shrink:0;margin-top:4px}
+.body{background:#fff;border-radius:0 0 14px 14px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr}}
+.info-item{background:#f5f6fa;border-radius:8px;padding:10px 12px}
+.info-item .lbl{font-size:11px;color:#8888aa;font-weight:500;margin-bottom:3px}
+.info-item .val{font-size:14px;font-weight:600;color:#1a1a2e;word-break:break-all}
+.divider{height:1px;background:#eef0f8;margin:16px 0}
+.sec{font-size:11px;font-weight:600;color:#8888aa;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.desc{background:#f5f6fa;border-radius:8px;padding:12px 14px;font-size:14px;color:#1a1a2e;line-height:1.65;white-space:pre-wrap}
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.ev-item{border-radius:10px;overflow:hidden;border:1.5px solid #e2e4ef;cursor:pointer;aspect-ratio:4/3;transition:transform .15s,box-shadow .15s}
+.ev-item:hover{transform:scale(1.03);box-shadow:0 4px 16px rgba(26,79,186,.15);border-color:#1a4fba}
+.ev-item img{width:100%;height:100%;object-fit:cover;display:block}
+.hint{font-size:11px;color:#aaa;margin-top:8px}
+footer{text-align:center;margin-top:20px;font-size:11px;color:#aaa}
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px}
+.lb.open{display:flex}
+.lb img{max-width:100%;max-height:78vh;border-radius:8px;object-fit:contain}
+.lb-close{position:fixed;top:14px;right:18px;color:#fff;font-size:34px;cursor:pointer;background:none;border:none;font-weight:300}
+.lb-nav{display:flex;gap:12px;align-items:center}
+.lb-nav button{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;cursor:pointer}
+.lb-nav button:hover{background:rgba(255,255,255,.28)}
+.lb-counter{color:rgba(255,255,255,.6);font-size:13px}
+.lb-dl{background:#1a4fba;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hdr">
+    <div><div class="sub">CRM CONSLIKE — DEMANDA TÉCNICA</div><h1>${d.categoria||'Demanda Técnica'}</h1></div>
+    <span class="prio">${prio}</span>
+  </div>
+  <div class="body">
+    <div class="info-grid">
+      <div class="info-item"><div class="lbl">👤 Cliente</div><div class="val">${d.nome}</div></div>
+      <div class="info-item"><div class="lbl">🔑 Token / ID</div><div class="val">${d.token}</div></div>
+      ${d.empresa?`<div class="info-item"><div class="lbl">🏢 Empresa</div><div class="val">${d.empresa}</div></div>`:''}
+      <div class="info-item"><div class="lbl">📅 Data</div><div class="val">${dataFmt}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="sec">Descrição do problema</div>
+    <div class="desc">${d.problema}</div>
+    ${d.passos?`<div class="divider"></div><div class="sec">Passos para reproduzir</div><div class="desc">${d.passos}</div>`:''}
+    ${imgs.length?`<div class="divider"></div><div class="sec">Evidências</div><div class="ev-grid">${imgsHTML}</div><p class="hint">Clique em qualquer imagem para ampliar ou baixar.</p>`:''}
+  </div>
+  <footer>CRM Conslike • crmconslike.com.br • Gerado em ${new Date().toLocaleDateString('pt-BR')}</footer>
+</div>
+
+<div class="lb" id="lb">
+  <button class="lb-close" onclick="closeLb()">×</button>
+  <img id="lb-img" src="" alt="">
+  <div class="lb-nav">
+    <button onclick="moveLb(-1)">← Anterior</button>
+    <span class="lb-counter" id="lb-counter"></span>
+    <button onclick="moveLb(1)">Próxima →</button>
+  </div>
+  <a class="lb-dl" id="lb-dl" download>⬇ Baixar imagem</a>
+</div>
+
+<script>
+${lbData}
+let lbI=0;
+function openLb(i){lbI=i;updLb();document.getElementById('lb').classList.add('open');}
+function closeLb(){document.getElementById('lb').classList.remove('open');}
+function moveLb(d){lbI=(lbI+d+lbImgs.length)%lbImgs.length;updLb();}
+function updLb(){
+  document.getElementById('lb-img').src=lbImgs[lbI];
+  document.getElementById('lb-counter').textContent=(lbI+1)+' / '+lbImgs.length;
+  const a=document.getElementById('lb-dl'); a.href=lbImgs[lbI]; a.download='evidencia_'+(lbI+1)+'.jpg';
+}
+document.getElementById('lb').addEventListener('click',function(e){if(e.target===this)closeLb();});
+document.addEventListener('keydown',e=>{if(!document.getElementById('lb').classList.contains('open'))return;if(e.key==='ArrowLeft')moveLb(-1);if(e.key==='ArrowRight')moveLb(1);if(e.key==='Escape')closeLb();});
+<\/script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `demanda_${d.nome.replace(/\s+/g,'_')}_${d.dataVal||'sem-data'}.html`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+// Lightbox do formulário (prévia)
+function openLightbox(i) {
+  lbIndex = i;
+  updateLb();
+  document.getElementById('lightbox').classList.add('open');
+}
+function updateLb() {
+  document.getElementById('lb-img').src = imgs[lbIndex].src;
+  document.getElementById('lb-counter').textContent = (lbIndex+1) + ' / ' + imgs.length;
+  const a = document.getElementById('lb-dl');
+  a.href = imgs[lbIndex].src;
+  a.download = imgs[lbIndex].name || ('evidencia_'+(lbIndex+1)+'.jpg');
+}
+document.getElementById('lb-close').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
+document.getElementById('lb-prev').addEventListener('click', () => { lbIndex=(lbIndex-1+imgs.length)%imgs.length; updateLb(); });
+document.getElementById('lb-next').addEventListener('click', () => { lbIndex=(lbIndex+1)%imgs.length; updateLb(); });
+document.getElementById('lightbox').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key==='ArrowLeft') { lbIndex=(lbIndex-1+imgs.length)%imgs.length; updateLb(); }
+  if (e.key==='ArrowRight') { lbIndex=(lbIndex+1)%imgs.length; updateLb(); }
+  if (e.key==='Escape') document.getElementById('lightbox').classList.remove('open');
+});
+</script>
+</body>
+</html>
